@@ -1,0 +1,53 @@
+---
+globs: app/api/**/*.ts, pages/api/**/*.ts
+description: API routes development guidelines
+---
+
+# API Routes Development Rules
+
+## Route Structure
+- Use App Router API routes (app/api/)
+- Group related endpoints in folders
+- Use descriptive route names
+- Implement proper HTTP methods
+
+## Request/Response Handling
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function GET(request: NextRequest) {
+  try {
+    // Handle GET request
+    return NextResponse.json({ data: 'success' });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+## Error Handling
+- Always wrap in try-catch
+- Return appropriate HTTP status codes
+- Log errors for debugging
+- Provide meaningful error messages
+
+## Validation
+- Validate request data
+- Use libraries like Zod for schema validation
+- Sanitize input data
+- Check authentication/authorization
+
+## Performance
+- Use streaming for large responses
+- Implement proper caching headers
+- Consider rate limiting
+- Optimize database queries
+
+## Security
+- Validate all inputs
+- Use HTTPS in production
+- Implement proper CORS
+- Sanitize data before processing

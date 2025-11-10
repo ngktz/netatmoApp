@@ -1,0 +1,57 @@
+---
+alwaysApply: true
+description: Performance optimization guidelines
+---
+
+# Performance Optimization Rules
+
+## Code Splitting
+- Use dynamic imports for large components
+- Implement route-based code splitting
+- Lazy load non-critical components
+- Use React.lazy() for component splitting
+
+## Image Optimization
+```typescript
+import Image from 'next/image';
+
+<Image
+  src="/image.jpg"
+  alt="Description"
+  width={500}
+  height={300}
+  priority={isAboveFold}
+  placeholder="blur"
+  blurDataURL="data:image/jpeg;base64,..."
+/>
+```
+
+## Caching Strategies
+- Use Next.js built-in caching
+- Implement proper cache headers
+- Use SWR or React Query for data fetching
+- Cache expensive computations
+
+## Bundle Optimization
+- Analyze bundle size regularly
+- Remove unused dependencies
+- Use tree shaking
+- Optimize imports
+
+## Rendering Performance
+- Use React.memo() for expensive components
+- Implement proper key props
+- Avoid inline object/function creation
+- Use useMemo() and useCallback() appropriately
+
+## Database Optimization
+- Use database indexes
+- Implement pagination
+- Use connection pooling
+- Optimize queries
+
+## Monitoring
+- Use Web Vitals for performance metrics
+- Monitor Core Web Vitals
+- Set up performance budgets
+- Regular performance audits

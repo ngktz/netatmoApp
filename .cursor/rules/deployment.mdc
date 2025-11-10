@@ -1,0 +1,68 @@
+---
+alwaysApply: true
+description: Deployment and production guidelines
+---
+
+# Deployment Rules for Next.js
+
+## Build Configuration
+- Use production build for deployment
+- Optimize bundle size
+- Enable compression
+- Configure proper environment variables
+
+## Environment Setup
+```typescript
+// next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'standalone', // for Docker
+  images: {
+    domains: ['example.com'],
+  },
+  env: {
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
+  },
+};
+
+module.exports = nextConfig;
+```
+
+## Docker Configuration
+```dockerfile
+FROM node:18-alpine AS base
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+FROM base AS build
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM base AS runtime
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+## Monitoring & Logging
+- Set up error tracking (Sentry)
+- Implement proper logging
+- Monitor performance metrics
+- Set up health checks
+
+## CI/CD Pipeline
+- Run tests before deployment
+- Use proper branching strategy
+- Implement automated deployments
+- Rollback capabilities
+
+## Production Checklist
+- [ ] Environment variables configured
+- [ ] Database migrations applied
+- [ ] SSL certificates installed
+- [ ] Monitoring configured
+- [ ] Backup strategy in place
+- [ ] Performance optimized

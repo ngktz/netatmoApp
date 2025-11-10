@@ -1,0 +1,162 @@
+---
+globs: *.ts,*.tsx
+description: Netatmo API data processing and state management
+---
+
+# Netatmo Data Handling Rules
+
+## TypeScript Interfaces
+```typescript
+interface NetatmoWeatherData {
+  body: {
+    devices: Array<{
+      _id: string;
+      station_name: string;
+      modules: Array<{
+        _id: string;
+        module_name: string;
+        data_type: string[];
+        dashboard_data: {
+          time_utc: number;
+          Temperature?: number;
+          Humidity?: number;
+          CO2?: number;
+          Pressure?: number;
+          Noise?: number;
+        };
+      }>;
+    }>;
+  };
+}
+
+interface NetatmoThermostatData {
+  body: {
+    devices: Array<{
+      _id: string;
+      name: string;
+      setpoint: {
+        setpoint_mode: string;
+        setpoint_temp?: number;
+        setpoint_endtime?: number;
+      };
+      measured: {
+        temperature: number;
+        humidity: number;
+      };
+    }>;
+  };
+}
+```
+
+## Data Processing Functions
+```typescript
+// Process weather station data
+const processWeatherData = (data: NetatmoWeatherData) => {
+  return data.body.devices.map(device => ({
+    id: device._id,
+    name: device.station_name,
+    modules: device.modules.map(module => ({
+      id: module._id,
+      name: module.module_name,
+      data: module.dashboard_data,
+      lastUpdate: new Date(module.dashboard_data.time_utc * 1000)
+    }))
+  }));
+};
+
+// Process thermostat data
+const processThermostatData = (data: NetatmoThermostatData) => {
+  return data.body.devices.map(device => ({
+    id: device._id,
+    name: device.name,
+    currentTemp: device.measured.temperature,
+    humidity: device.measured.humidity,
+    setpoint: device.setpoint
+  }));
+};
+```
+
+## State Management
+```typescript
+// Using Zustand for state management
+interface NetatmoStore {
+  weatherData: ProcessedWeatherData[] | null;
+  thermostatData: ProcessedThermostatData[] | null;
+  loading: boolean;
+  error: string | null;
+  fetchWeatherData: () => Promise<void>;
+  fetchThermostatData: () => Promise<void>;
+}
+
+const useNetatmoStore = create<NetatmoStore>((set, get) => ({
+  weatherData: null,
+  thermostatData: null,
+  loading: false,
+  error: null,
+  
+  fetchWeatherData: async () => {
+    set({ loading: true, error: null });
+    try {
+      const data = await getWeatherData();
+      const processed = processWeatherData(data);
+      set({ weatherData: processed, loading: false });
+    } catch (error) {
+      set({ error: error.message, loading: false });
+    }
+  }
+}));
+```
+
+## Data Caching
+```typescript
+// Implement caching for frequently accessed data
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+const getCachedData = (key: string) => {
+  const cached = localStorage.getItem(key);
+  if (cached) {
+    const { data, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp < CACHE_DURATION) {
+      return data;
+    }
+  }
+  return null;
+};
+
+const setCachedData = (key: string, data: any) => {
+  localStorage.setItem(key, JSON.stringify({
+    data,
+    timestamp: Date.now()
+  }));
+};
+```
+
+## Data Validation
+```typescript
+// Validate API responses
+const validateWeatherData = (data: any): data is NetatmoWeatherData => {
+  return data?.body?.devices && Array.isArray(data.body.devices);
+};
+
+// Use Zod for runtime validation
+const WeatherDataSchema = z.object({
+  body: z.object({
+    devices: z.array(z.object({
+      _id: z.string(),
+      station_name: z.string(),
+      modules: z.array(z.object({
+        _id: z.string(),
+        module_name: z.string(),
+        dashboard_data: z.object({
+          time_utc: z.number(),
+          Temperature: z.number().optional(),
+          Humidity: z.number().optional(),
+          CO2: z.number().optional(),
+          Pressure: z.number().optional(),
+          Noise: z.number().optional()
+        })
+      }))
+    }))
+  })
+});
+```

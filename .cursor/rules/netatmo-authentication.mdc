@@ -1,0 +1,52 @@
+---
+alwaysApply: true
+description: Netatmo API authentication and OAuth2 implementation
+---
+
+# Netatmo API Authentication Rules
+
+## OAuth2 Flow Implementation
+- Use OAuth2 authorization code flow for Netatmo API
+- Implement proper token management and refresh
+- Store tokens securely in HTTP-only cookies or secure storage
+- Handle token expiration gracefully
+
+## Environment Variables
+```typescript
+// Required Netatmo API credentials
+NETATMO_CLIENT_ID=your_client_id
+NETATMO_CLIENT_SECRET=your_client_secret
+NETATMO_REDIRECT_URI=http://localhost:3000/api/auth/netatmo/callback
+NETATMO_API_BASE_URL=https://api.netatmo.com
+```
+
+## Authentication Flow
+```typescript
+// OAuth2 authorization URL
+const authUrl = `https://api.netatmo.com/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=read_station read_thermostat&state=${state}`;
+
+// Token exchange
+const tokenResponse = await fetch('https://api.netatmo.com/oauth2/token', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: new URLSearchParams({
+    grant_type: 'authorization_code',
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    code: authorizationCode,
+    redirect_uri: REDIRECT_URI
+  })
+});
+```
+
+## Token Management
+- Implement automatic token refresh
+- Store refresh tokens securely
+- Handle token revocation
+- Implement proper error handling for auth failures
+
+## Security Best Practices
+- Never expose client secret in frontend code
+- Use secure HTTP-only cookies for token storage
+- Implement CSRF protection
+- Validate state parameter in OAuth callback

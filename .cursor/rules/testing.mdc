@@ -1,0 +1,51 @@
+---
+globs: *.test.ts,*.test.tsx,*.spec.ts,*.spec.tsx
+description: Testing guidelines for Next.js applications
+---
+
+# Testing Rules for Next.js
+
+## Testing Framework
+- Use Jest and React Testing Library
+- Use Playwright for E2E testing
+- Mock external dependencies
+- Test user interactions, not implementation
+
+## Component Testing
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react';
+import Component from './Component';
+
+describe('Component', () => {
+  it('renders correctly', () => {
+    render(<Component title="Test" />);
+    expect(screen.getByText('Test')).toBeInTheDocument();
+  });
+
+  it('handles user interaction', () => {
+    const mockHandler = jest.fn();
+    render(<Component onAction={mockHandler} />);
+    
+    fireEvent.click(screen.getByRole('button'));
+    expect(mockHandler).toHaveBeenCalled();
+  });
+});
+```
+
+## API Route Testing
+- Test different HTTP methods
+- Test error scenarios
+- Mock external API calls
+- Test authentication/authorization
+
+## Test Organization
+- Group related tests in describe blocks
+- Use descriptive test names
+- Follow AAA pattern (Arrange, Act, Assert)
+- Keep tests simple and focused
+
+## Coverage
+- Aim for 80%+ code coverage
+- Focus on critical business logic
+- Test edge cases and error conditions
+- Don't test implementation details

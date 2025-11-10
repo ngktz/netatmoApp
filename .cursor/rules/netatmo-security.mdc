@@ -1,0 +1,237 @@
+---
+alwaysApply: true
+description: Security best practices for Netatmo API integration
+---
+
+# Netatmo API Security Rules
+
+## Environment Variables Security
+```typescript
+// Never expose sensitive data in client-side code
+const NETATMO_CONFIG = {
+  clientId: process.env.NEXT_PUBLIC_NETATMO_CLIENT_ID!,
+  // Client secret must NEVER be exposed to client
+  clientSecret: process.env.NETATMO_CLIENT_SECRET!, // Server-side only
+  redirectUri: process.env.NEXT_PUBLIC_NETATMO_REDIRECT_URI!,
+  apiBaseUrl: process.env.NEXT_PUBLIC_NETATMO_API_BASE_URL || 'https://api.netatmo.com'
+};
+
+// Validate required environment variables
+const validateNetatmoConfig = () => {
+  const required = ['NEXT_PUBLIC_NETATMO_CLIENT_ID', 'NETATMO_CLIENT_SECRET'];
+  const missing = required.filter(key => !process.env[key]);
+  
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+};
+```
+
+## Token Security
+```typescript
+// Secure token storage using HTTP-only cookies
+import { cookies } from 'next/headers';
+
+const setSecureToken = (token: string, name: string) => {
+  cookies().set(name, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7 // 7 days
+  });
+};
+
+const getSecureToken = (name: string): string | null => {
+  return cookies().get(name)?.value || null;
+};
+
+// Token encryption for additional security
+import crypto from 'crypto';
+
+const encryptToken = (token: string): string => {
+  const algorithm = 'aes-256-gcm';
+  const key = crypto.scryptSync(process.env.ENCRYPTION_KEY!, 'salt', 32);
+  const iv = crypto.randomBytes(16);
+  
+  const cipher = crypto.createCipher(algorithm, key);
+  let encrypted = cipher.update(token, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  
+  return iv.toString('hex') + ':' + encrypted;
+};
+```
+
+## API Request Security
+```typescript
+// Secure API request wrapper
+const makeSecureNetatmoRequest = async <T>(
+  endpoint: string,
+  options: RequestInit = {},
+  accessToken: string
+): Promise<T> => {
+  // Validate token format
+  if (!isValidToken(accessToken)) {
+    throw new Error('Invalid access token format');
+  }
+  
+  // Add security headers
+  const secureHeaders = {
+    'Authorization': `Bearer ${accessToken}`,
+    'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+    'User-Agent': 'NetatmoApp/1.0',
+    ...options.headers
+  };
+  
+  // Make request with timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  
+  try {
+    const response = await fetch(endpoint, {
+      ...options,
+      headers: secureHeaders,
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    return await response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+};
+
+const isValidToken = (token: string): boolean => {
+  // Basic token format validation
+  return /^[A-Za-z0-9\-_]+$/.test(token) && token.length > 20;
+};
+```
+
+## Input Validation and Sanitization
+```typescript
+import { z } from 'zod';
+
+// Validation schemas for Netatmo API inputs
+const DeviceIdSchema = z.string().min(1).max(50);
+const TemperatureSchema = z.number().min(5).max(35);
+const ModuleIdSchema = z.string().min(1).max(50);
+
+// Sanitize user inputs
+const sanitizeInput = (input: any): any => {
+  if (typeof input === 'string') {
+    return input.trim().replace(/[<>]/g, '');
+  }
+  if (typeof input === 'object' && input !== null) {
+    const sanitized: any = {};
+    for (const [key, value] of Object.entries(input)) {
+      sanitized[key] = sanitizeInput(value);
+    }
+    return sanitized;
+  }
+  return input;
+};
+
+// Validate API request body
+const validateThermostatRequest = (body: any) => {
+  const schema = z.object({
+    device_id: DeviceIdSchema,
+    setpoint_mode: z.enum(['manual', 'auto', 'away']),
+    setpoint_temp: TemperatureSchema.optional(),
+    setpoint_endtime: z.number().optional()
+  });
+  
+  return schema.parse(sanitizeInput(body));
+};
+```
+
+## CSRF Protection
+```typescript
+import { randomBytes } from 'crypto';
+
+// Generate CSRF token
+const generateCSRFToken = (): string => {
+  return randomBytes(32).toString('hex');
+};
+
+// Validate CSRF token
+const validateCSRFToken = (token: string, sessionToken: string): boolean => {
+  return token === sessionToken && token.length === 64;
+};
+
+// Middleware for CSRF protection
+export const csrfProtection = (req: NextRequest) => {
+  const csrfToken = req.headers.get('x-csrf-token');
+  const sessionToken = req.cookies.get('csrf-token')?.value;
+  
+  if (!csrfToken || !validateCSRFToken(csrfToken, sessionToken || '')) {
+    return NextResponse.json(
+      { error: 'CSRF token validation failed' },
+      { status: 403 }
+    );
+  }
+  
+  return null;
+};
+```
+
+## Rate Limiting and DDoS Protection
+```typescript
+// IP-based rate limiting
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+const checkRateLimit = (ip: string): boolean => {
+  const now = Date.now();
+  const limit = rateLimitMap.get(ip);
+  
+  if (!limit || now > limit.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + 60000 }); // 1 minute window
+    return true;
+  }
+  
+  if (limit.count >= 10) { // 10 requests per minute
+    return false;
+  }
+  
+  limit.count++;
+  return true;
+};
+
+// Apply rate limiting middleware
+export const rateLimitMiddleware = (req: NextRequest) => {
+  const ip = req.ip || req.headers.get('x-forwarded-for') || 'unknown';
+  
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    );
+  }
+  
+  return null;
+};
+```
+
+## Data Privacy and GDPR Compliance
+```typescript
+// Data anonymization for logging
+const anonymizeUserData = (data: any): any => {
+  const anonymized = { ...data };
+  
+  // Remove or hash sensitive fields
+  if (anonymized.user_id) {
+    anonymized.user_id = crypto.createHash('sha256')
+      .update(anonymized.user_id)
+      .digest('hex')
+      .substring(0, 8);
+  }
+  
+  return anonymized;
+};
+
+// Log data with privacy protection
+const logNetatmoData = (data: any, level: 'info' | 'error' | 'warn') => {
+  const anonymized = anonymizeUserData(data);
+  console[level]('Netatmo API:', anonymized);
+};
+```

@@ -1,0 +1,61 @@
+---
+alwaysApply: true
+description: Security best practices for Next.js applications
+---
+
+# Security Rules for Next.js
+
+## Authentication & Authorization
+- Use NextAuth.js or similar for authentication
+- Implement proper session management
+- Validate user permissions on every request
+- Use secure cookies for sessions
+
+## Input Validation
+- Validate all user inputs
+- Sanitize data before processing
+- Use libraries like Zod or Yup
+- Implement CSRF protection
+
+## Environment Variables
+- Never commit secrets to version control
+- Use .env.local for local development
+- Use proper environment variable validation
+- Rotate secrets regularly
+
+## API Security
+```typescript
+// Example secure API route
+export async function POST(request: NextRequest) {
+  // Validate authentication
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Validate input
+  const body = await request.json();
+  const validatedData = schema.parse(body);
+
+  // Process request securely
+  // ...
+}
+```
+
+## Headers & CORS
+- Set proper security headers
+- Configure CORS appropriately
+- Use HTTPS in production
+- Implement rate limiting
+
+## Data Protection
+- Encrypt sensitive data
+- Use proper database security
+- Implement data retention policies
+- Regular security audits
+
+## Dependencies
+- Keep dependencies updated
+- Use npm audit regularly
+- Remove unused dependencies
+- Use lock files for reproducible builds

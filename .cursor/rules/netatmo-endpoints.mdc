@@ -1,0 +1,110 @@
+---
+globs: *.ts,*.tsx
+description: Netatmo API endpoints and data handling
+---
+
+# Netatmo API Endpoints Rules
+
+## API Base Configuration
+```typescript
+const NETATMO_API_BASE = 'https://api.netatmo.com';
+const API_VERSION = 'v1';
+
+// Common headers for all requests
+const getAuthHeaders = (accessToken: string) => ({
+  'Authorization': `Bearer ${accessToken}`,
+  'Content-Type': 'application/json'
+});
+```
+
+## Weather Station Endpoints
+```typescript
+// Get weather station data
+const getWeatherData = async (accessToken: string) => {
+  const response = await fetch(`${NETATMO_API_BASE}/api/getstationsdata`, {
+    headers: getAuthHeaders(accessToken)
+  });
+  return response.json();
+};
+
+// Get measurements
+const getMeasurements = async (accessToken: string, deviceId: string, moduleId: string) => {
+  const response = await fetch(`${NETATMO_API_BASE}/api/getmeasure`, {
+    method: 'POST',
+    headers: getAuthHeaders(accessToken),
+    body: JSON.stringify({
+      device_id: deviceId,
+      module_id: moduleId,
+      scale: 'max',
+      type: 'Temperature,Humidity,CO2,Pressure,Noise'
+    })
+  });
+  return response.json();
+};
+```
+
+## Energy Management Endpoints
+```typescript
+// Get thermostat data
+const getThermostatData = async (accessToken: string) => {
+  const response = await fetch(`${NETATMO_API_BASE}/api/getthermostatsdata`, {
+    headers: getAuthHeaders(accessToken)
+  });
+  return response.json();
+};
+
+// Set thermostat temperature
+const setThermostatTemp = async (accessToken: string, deviceId: string, temperature: number) => {
+  const response = await fetch(`${NETATMO_API_BASE}/api/setthermpoint`, {
+    method: 'POST',
+    headers: getAuthHeaders(accessToken),
+    body: JSON.stringify({
+      device_id: deviceId,
+      setpoint_mode: 'manual',
+      setpoint_temp: temperature
+    })
+  });
+  return response.json();
+};
+```
+
+## Security Camera Endpoints
+```typescript
+// Get home security data
+const getHomeSecurityData = async (accessToken: string) => {
+  const response = await fetch(`${NETATMO_API_BASE}/api/gethomedata`, {
+    headers: getAuthHeaders(accessToken)
+  });
+  return response.json();
+};
+
+// Get camera live stream
+const getCameraLiveStream = async (accessToken: string, cameraId: string) => {
+  const response = await fetch(`${NETATMO_API_BASE}/api/getcamerapicture`, {
+    method: 'POST',
+    headers: getAuthHeaders(accessToken),
+    body: JSON.stringify({
+      image_id: cameraId,
+      key: 'live'
+    })
+  });
+  return response.json();
+};
+```
+
+## Aircare Endpoints
+```typescript
+// Get air quality data
+const getAirQualityData = async (accessToken: string) => {
+  const response = await fetch(`${NETATMO_API_BASE}/api/getstationsdata`, {
+    headers: getAuthHeaders(accessToken)
+  });
+  return response.json();
+};
+```
+
+## Error Handling
+- Always check response status
+- Handle rate limiting (429 status)
+- Implement retry logic with exponential backoff
+- Log API errors for debugging

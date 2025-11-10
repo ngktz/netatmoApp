@@ -1,0 +1,49 @@
+---
+globs: package.json,pnpm-lock.yaml,.npmrc
+description: pnpm package manager best practices
+---
+
+# pnpm Package Manager Rules
+
+## Package Management
+- Use pnpm instead of npm for better performance and disk space efficiency
+- Always use `pnpm install` instead of `npm install`
+- Use `pnpm add` for adding dependencies
+- Use `pnpm remove` for removing dependencies
+
+## Scripts
+```json
+{
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack", 
+    "start": "next start",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .next node_modules pnpm-lock.yaml",
+    "fresh-install": "pnpm clean && pnpm install"
+  }
+}
+```
+
+## .npmrc Configuration
+```
+# pnpm configuration
+auto-install-peers=true
+strict-peer-dependencies=false
+shamefully-hoist=true
+```
+
+## Best Practices
+- Use `pnpm fresh-install` for clean installs
+- Use `pnpm type-check` for TypeScript validation
+- Use `pnpm lint:fix` for automatic linting fixes
+- Never commit `node_modules` or `pnpm-lock.yaml` to git
+- Use exact versions for production dependencies when possible
+
+## Performance Benefits
+- Faster installs due to content-addressable storage
+- Disk space efficient with hard links
+- Better dependency resolution
+- Faster CI/CD builds

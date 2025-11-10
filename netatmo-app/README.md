@@ -4,57 +4,49 @@ Eine moderne Next.js App zur Anzeige deiner Netatmo Wetterstationen-Daten.
 
 ## Features
 
-- 🔐 Statische Token-Authentifizierung mit Netatmo
+- 🔐 Sichere OAuth2 Authentifizierung mit Netatmo
 - 🌡️ Anzeige aller Wetterdaten (Temperatur, Luftfeuchtigkeit, CO₂, Luftdruck, Lärmpegel)
 - 📱 Responsive Design mit Tailwind CSS
 - ⚡ Automatische Datenaktualisierung alle 30 Sekunden
-- 🔒 Sichere Token-Speicherung in Environment Variables
+- 🔒 Sichere Token-Speicherung in HTTP-only Cookies
 - 🎨 Moderne UI mit Farbkodierung für verschiedene Werte
 
 ## Setup
 
-### 1. Netatmo Access Token erhalten
+### 1. Netatmo API Zugang einrichten
 
-Du benötigst einen statischen Access Token von Netatmo. Es gibt mehrere Möglichkeiten:
-
-**Option A: Über die Netatmo Developer API**
 1. Gehe zu [https://dev.netatmo.com/](https://dev.netatmo.com/)
 2. Erstelle ein Entwicklerkonto
-3. Erstelle eine neue App und notiere dir `Client ID` und `Client Secret`
-4. Verwende die OAuth2 API, um einen Access Token zu erhalten:
-   ```bash
-   curl -X POST "https://api.netatmo.com/oauth2/token" \
-     -d "grant_type=password" \
-     -d "client_id=DEINE_CLIENT_ID" \
-     -d "client_secret=DEIN_CLIENT_SECRET" \
-     -d "username=DEINE_EMAIL" \
-     -d "password=DEIN_PASSWORT" \
-     -d "scope=read_station"
-   ```
-5. Kopiere den `access_token` aus der Antwort
-
-**Option B: Über die Netatmo Web-API (falls verfügbar)**
-- Nutze die offizielle Netatmo API-Dokumentation, um einen Token zu generieren
+3. Erstelle eine neue App
+4. Notiere dir `Client ID` und `Client Secret`
+5. Setze die Redirect URI auf: `http://localhost:3000/api/auth/netatmo/callback`
 
 ### 2. Environment Variables konfigurieren
 
-Erstelle eine `.env.local` Datei im Projektroot:
+Kopiere `.env.example` zu `.env.local` und fülle die Werte aus:
 
-```env
-NETATMO_ACCESS_TOKEN=dein_access_token_hier
-NEXT_PUBLIC_NETATMO_API_BASE_URL=https://api.netatmo.com
+```bash
+cp .env.example .env.local
 ```
 
-**Wichtig:** Der `NETATMO_ACCESS_TOKEN` muss ein gültiger Bearer Token sein, der die Berechtigung `read_station` hat.
+Bearbeite `.env.local`:
+
+```env
+NEXT_PUBLIC_NETATMO_CLIENT_ID=deine_client_id
+NETATMO_CLIENT_SECRET=dein_client_secret
+NEXT_PUBLIC_NETATMO_REDIRECT_URI=http://localhost:3000/api/auth/netatmo/callback
+NEXT_PUBLIC_NETATMO_API_BASE_URL=https://api.netatmo.com
+ENCRYPTION_KEY=generiere_einen_32_zeichen_schluessel
+```
+
+**Encryption Key generieren:**
+```bash
+openssl rand -hex 32
+```
 
 ### 3. Dependencies installieren und starten
 
 ```bash
-# Mit pnpm (empfohlen)
-pnpm install
-pnpm dev
-
-# Oder mit npm
 npm install
 npm run dev
 ```
@@ -63,8 +55,8 @@ Die App ist dann unter [http://localhost:3000](http://localhost:3000) verfügbar
 
 ## Verwendung
 
-1. **Token konfigurieren**: Stelle sicher, dass `NETATMO_ACCESS_TOKEN` in `.env.local` gesetzt ist
-2. **Daten anzeigen**: Nach dem Start werden automatisch deine Wetterstationen geladen
+1. **Authentifizierung**: Klicke auf "Mit Netatmo anmelden" und autorisiere die App
+2. **Daten anzeigen**: Nach der Anmeldung werden automatisch deine Wetterstationen geladen
 3. **Aktualisieren**: Die Daten werden alle 30 Sekunden automatisch aktualisiert
 
 ## Technische Details
@@ -75,42 +67,22 @@ Die App ist dann unter [http://localhost:3000](http://localhost:3000) verfügbar
 - **Styling**: Tailwind CSS
 - **State Management**: SWR für Server State
 - **TypeScript**: Vollständige Typisierung
-- **Authentication**: Statischer Access Token aus Environment Variables
+- **Authentication**: OAuth2 mit Netatmo
 
 ### Sicherheit
 
-- Statischer Access Token aus Environment Variables (nur server-side)
-- Sichere Environment Variables (`.env.local` ist in `.gitignore`)
-- Input-Validierung
+- HTTP-only Cookies für Token-Speicherung
+- CSRF-Schutz mit State-Parameter
+- Sichere Environment Variables
+- Input-Validierung mit Zod
 
 ### API Endpoints
 
-- `GET /api/weather` - Lädt Wetterdaten (verwendet statischen ACCESS_TOKEN aus .env)
+- `GET /api/auth/netatmo` - Startet OAuth Flow
+- `GET /api/auth/netatmo/callback` - OAuth Callback
+- `GET /api/weather` - Lädt Wetterdaten
 
 ## Entwicklung
-
-### pnpm Commands
-
-```bash
-# Entwicklung starten
-pnpm dev
-
-# Build erstellen
-pnpm build
-
-# Production starten
-pnpm start
-
-# Linting
-pnpm lint
-pnpm lint:fix
-
-# Type Checking
-pnpm type-check
-
-# Clean install
-pnpm fresh-install
-```
 
 ### Code Structure
 
@@ -140,9 +112,8 @@ Das Projekt enthält umfassende Cursor Rules für:
 1. **"Missing required environment variables"**
    - Überprüfe, ob alle Environment Variables in `.env.local` gesetzt sind
 
-2. **"Access token invalid or expired"**
-   - Überprüfe, ob der `NETATMO_ACCESS_TOKEN` in `.env.local` korrekt gesetzt ist
-   - Generiere einen neuen Token über die Netatmo API
+2. **"Access token expired"**
+   - Melde dich erneut an, die App wird automatisch zur Login-Seite weiterleiten
 
 3. **"No weather stations found"**
    - Stelle sicher, dass dein Netatmo-Konto Wetterstationen hat

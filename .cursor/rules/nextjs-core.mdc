@@ -1,0 +1,45 @@
+---
+alwaysApply: true
+description: Core Next.js development principles and best practices
+---
+
+# Next.js Core Development Rules
+
+## Project Structure
+- Use App Router (app directory) for new projects, not Pages Router
+- Place components in `components/` directory with proper organization
+- Use `lib/` for utilities, hooks, and shared logic
+- Store types in `types/` directory
+- Use `public/` for static assets
+
+## File Naming Conventions
+- Use kebab-case for file and folder names
+- Use PascalCase for React components
+- Use camelCase for utilities and hooks
+- Use UPPER_CASE for constants
+
+## Component Guidelines
+- Always use TypeScript for components
+- Use functional components with hooks
+- Implement proper prop types with interfaces
+- Use React.FC or explicit return types
+- Prefer composition over inheritance
+
+## Performance Best Practices
+- Use dynamic imports for code splitting
+- Implement proper loading states
+- Use React.memo() for expensive components
+- Optimize images with next/image
+- Use proper caching strategies
+
+## State Management
+- Use React state for local component state
+- Use Context API for shared state
+- Consider Zustand or Redux Toolkit for complex state
+- Avoid prop drilling
+
+## Error Handling
+- Implement error boundaries
+- Use try-catch for async operations
+- Provide meaningful error messages
+- Log errors appropriately

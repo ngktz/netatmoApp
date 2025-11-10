@@ -1,0 +1,259 @@
+---
+globs: *.ts,*.tsx
+description: Performance optimization for Netatmo API integration
+---
+
+# Netatmo API Performance Rules
+
+## Request Optimization
+```typescript
+// Batch multiple API requests
+const batchNetatmoRequests = async <T>(
+  requests: Array<() => Promise<T>>,
+  batchSize = 5
+): Promise<T[]> => {
+  const results: T[] = [];
+  
+  for (let i = 0; i < requests.length; i += batchSize) {
+    const batch = requests.slice(i, i + batchSize);
+    const batchResults = await Promise.allSettled(batch.map(req => req()));
+    
+    results.push(...batchResults
+      .filter((result): result is PromiseFulfilledResult<T> => result.status === 'fulfilled')
+      .map(result => result.value)
+    );
+    
+    // Add delay between batches to respect rate limits
+    if (i + batchSize < requests.length) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+  
+  return results;
+};
+
+// Request deduplication
+class RequestDeduplicator {
+  private pendingRequests = new Map<string, Promise<any>>();
+  
+  async deduplicate<T>(key: string, requestFn: () => Promise<T>): Promise<T> {
+    if (this.pendingRequests.has(key)) {
+      return this.pendingRequests.get(key)!;
+    }
+    
+    const promise = requestFn().finally(() => {
+      this.pendingRequests.delete(key);
+    });
+    
+    this.pendingRequests.set(key, promise);
+    return promise;
+  }
+}
+
+const requestDeduplicator = new RequestDeduplicator();
+```
+
+## Caching Strategies
+```typescript
+// Multi-level caching implementation
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  ttl: number;
+}
+
+class NetatmoCache {
+  private memoryCache = new Map<string, CacheEntry<any>>();
+  private readonly DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes
+  
+  set<T>(key: string, data: T, ttl = this.DEFAULT_TTL): void {
+    this.memoryCache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl
+    });
+  }
+  
+  get<T>(key: string): T | null {
+    const entry = this.memoryCache.get(key);
+    if (!entry) return null;
+    
+    if (Date.now() - entry.timestamp > entry.ttl) {
+      this.memoryCache.delete(key);
+      return null;
+    }
+    
+    return entry.data;
+  }
+  
+  // Cache with stale-while-revalidate pattern
+  async getWithStaleRevalidate<T>(
+    key: string,
+    fetchFn: () => Promise<T>,
+    ttl = this.DEFAULT_TTL
+  ): Promise<T> {
+    const cached = this.get<T>(key);
+    if (cached) return cached;
+    
+    const data = await fetchFn();
+    this.set(key, data, ttl);
+    return data;
+  }
+}
+
+const netatmoCache = new NetatmoCache();
+```
+
+## Data Fetching Optimization
+```typescript
+// SWR configuration for Netatmo data
+import useSWR from 'swr';
+
+const NETATMO_SWR_CONFIG = {
+  refreshInterval: 30000, // 30 seconds
+  revalidateOnFocus: false,
+  revalidateOnReconnect: true,
+  dedupingInterval: 10000, // 10 seconds
+  errorRetryCount: 3,
+  errorRetryInterval: 5000
+};
+
+// Custom hook for weather data
+const useNetatmoWeatherData = (accessToken: string) => {
+  const { data, error, mutate } = useSWR(
+    accessToken ? ['weather-data', accessToken] : null,
+    async () => {
+      const data = await getWeatherData(accessToken);
+      return processWeatherData(data);
+    },
+    NETATMO_SWR_CONFIG
+  );
+  
+  return {
+    data,
+    error,
+    refresh: mutate,
+    loading: !data && !error
+  };
+};
+
+// Background data refresh
+const useBackgroundRefresh = (refreshFn: () => void, interval = 60000) => {
+  useEffect(() => {
+    const intervalId = setInterval(refreshFn, interval);
+    return () => clearInterval(intervalId);
+  }, [refreshFn, interval]);
+};
+```
+
+## Component Performance
+```typescript
+// Memoized components for Netatmo data
+const WeatherDisplay = React.memo<{
+  data: ProcessedWeatherData;
+  onRefresh: () => void;
+}>(({ data, onRefresh }) => {
+  return (
+    <div className="weather-display">
+      <h3>{data.name}</h3>
+      {data.modules.map(module => (
+        <WeatherModule key={module.id} module={module} />
+      ))}
+      <button onClick={onRefresh}>Aktualisieren</button>
+    </div>
+  );
+});
+
+// Virtual scrolling for large datasets
+import { FixedSizeList as List } from 'react-window';
+
+const VirtualizedWeatherList = ({ data }: { data: ProcessedWeatherData[] }) => {
+  const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => (
+    <div style={style}>
+      <WeatherDisplay data={data[index]} />
+    </div>
+  );
+  
+  return (
+    <List
+      height={600}
+      itemCount={data.length}
+      itemSize={200}
+      width="100%"
+    >
+      {Row}
+    </List>
+  );
+};
+```
+
+## Bundle Optimization
+```typescript
+// Dynamic imports for Netatmo components
+const NetatmoDashboard = dynamic(() => import('./NetatmoDashboard'), {
+  loading: () => <div>Lade Netatmo Dashboard...</div>,
+  ssr: false
+});
+
+const NetatmoCharts = dynamic(() => import('./NetatmoCharts'), {
+  loading: () => <div>Lade Diagramme...</div>
+});
+
+// Code splitting by feature
+const WeatherModule = dynamic(() => import('./modules/WeatherModule'));
+const ThermostatModule = dynamic(() => import('./modules/ThermostatModule'));
+const SecurityModule = dynamic(() => import('./modules/SecurityModule'));
+```
+
+## Image and Asset Optimization
+```typescript
+// Optimize Netatmo camera images
+const OptimizedCameraImage = ({ imageUrl, alt }: { imageUrl: string; alt: string }) => {
+  return (
+    <Image
+      src={imageUrl}
+      alt={alt}
+      width={800}
+      height={600}
+      priority={false}
+      placeholder="blur"
+      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+    />
+  );
+};
+```
+
+## Performance Monitoring
+```typescript
+// Performance metrics for Netatmo API calls
+const trackNetatmoPerformance = (operation: string, duration: number) => {
+  // Send to analytics service
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'netatmo_api_call', {
+      operation,
+      duration,
+      custom_parameter: 'netatmo'
+    });
+  }
+};
+
+// API call wrapper with performance tracking
+const trackApiCall = async <T>(
+  operation: string,
+  apiCall: () => Promise<T>
+): Promise<T> => {
+  const startTime = performance.now();
+  
+  try {
+    const result = await apiCall();
+    const duration = performance.now() - startTime;
+    trackNetatmoPerformance(operation, duration);
+    return result;
+  } catch (error) {
+    const duration = performance.now() - startTime;
+    trackNetatmoPerformance(`${operation}_error`, duration);
+    throw error;
+  }
+};
+```

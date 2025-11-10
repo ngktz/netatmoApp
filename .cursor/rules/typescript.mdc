@@ -1,0 +1,49 @@
+---
+globs: *.ts,*.tsx
+description: TypeScript best practices for Next.js
+---
+
+# TypeScript Rules for Next.js
+
+## Type Definitions
+- Always define interfaces for props
+- Use type unions for specific values
+- Prefer interfaces over types for object shapes
+- Use generic types for reusable components
+- Define strict types, avoid `any`
+
+## Import/Export
+- Use named exports for utilities
+- Use default exports for React components
+- Group imports: React, third-party, local
+- Use absolute imports with path mapping
+
+## API Types
+- Define API response types
+- Use discriminated unions for different response states
+- Create separate types for request/response
+- Use generic types for API hooks
+
+## Component Props
+```typescript
+interface ComponentProps {
+  title: string;
+  isVisible?: boolean;
+  onAction: (id: string) => void;
+  children?: React.ReactNode;
+}
+```
+
+## Event Handlers
+```typescript
+const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  // handler logic
+};
+```
+
+## Async Functions
+```typescript
+const fetchData = async (): Promise<ApiResponse> => {
+  // async logic
+};
+```

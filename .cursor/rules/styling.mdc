@@ -1,0 +1,44 @@
+---
+globs: *.css,*.scss,*.module.css,*.module.scss
+description: Styling guidelines for Next.js applications
+---
+
+# Styling Rules for Next.js
+
+## CSS Modules
+- Use CSS Modules for component-specific styles
+- Use descriptive class names
+- Avoid global styles when possible
+- Use CSS custom properties for theming
+
+## Tailwind CSS (if used)
+- Use utility classes for styling
+- Create custom components for repeated patterns
+- Use responsive prefixes (sm:, md:, lg:, xl:)
+- Follow mobile-first approach
+
+## Styling Patterns
+```css
+/* Component styles */
+.component {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.component--variant {
+  background-color: var(--primary-color);
+}
+```
+
+## Responsive Design
+- Mobile-first approach
+- Use relative units (rem, em, %)
+- Test on multiple screen sizes
+- Use CSS Grid and Flexbox
+
+## Performance
+- Minimize CSS bundle size
+- Use critical CSS for above-the-fold content
+- Avoid deep nesting (max 3 levels)
+- Use CSS containment when appropriate
