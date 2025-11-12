@@ -3,8 +3,12 @@
 import { useState, useEffect } from 'react';
 import WeatherDashboard from '@/components/WeatherDashboard';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import AuthButton from '@/components/AuthButton';
+import { useTranslation } from '@/lib/locale-provider';
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,12 +22,12 @@ export default function HomePage() {
           setIsAuthenticated(true);
         } else {
           const errorData = await response.json();
-          setError(errorData.error || 'Fehler beim Laden der Wetterdaten.');
+          setError(errorData.error || t('homepage.errorLoadingData'));
           setIsAuthenticated(false);
         }
       } catch (err) {
         console.error('Weather data fetch error:', err);
-        setError('Netzwerkfehler beim Laden der Wetterdaten.');
+        setError(t('homepage.networkError'));
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
@@ -49,12 +53,15 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-end mb-4">
+          <LanguageSwitcher />
+        </div>
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Netatmo Wetterstation
+            {t('homepage.title')}
           </h1>
           <p className="text-lg text-gray-600">
-            Deine persönlichen Wetterdaten im Überblick
+            {t('homepage.subtitle')}
           </p>
         </header>
 
@@ -69,10 +76,10 @@ export default function HomePage() {
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-800">
-                    Fehler
+                    {t('homepage.error')}
                   </h3>
                   <div className="mt-2 text-sm text-red-700">
-                    <p>{error}</p>
+                    <p>{t('homepage.errorLoadingData')}</p>
                   </div>
                 </div>
               </div>
@@ -92,16 +99,18 @@ export default function HomePage() {
                   </svg>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Konfiguration erforderlich
+                  {t('homepage.configurationRequired')}
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Bitte konfiguriere den NETATMO_ACCESS_TOKEN in deiner .env.local Datei.
+                  {t('homepage.configurationMessage')}
                 </p>
               </div>
               
+              <AuthButton onSuccess={handleAuthSuccess} />
+              
               <div className="mt-6 text-sm text-gray-500">
                 <p>
-                  Siehe README.md für Anweisungen zum Erstellen eines Access Tokens.
+                  {t('homepage.readmeHint')}
                 </p>
               </div>
             </div>

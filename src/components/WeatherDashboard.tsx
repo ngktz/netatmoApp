@@ -5,6 +5,7 @@ import useSWR from 'swr';
 import WeatherStation from './WeatherStation';
 import LoadingSpinner from './LoadingSpinner';
 import { ProcessedWeatherData } from '@/types/netatmo';
+import { useTranslation } from '@/lib/locale-provider';
 
 interface WeatherDashboardProps {
   onAuthRequired: () => void;
@@ -44,6 +45,7 @@ const fetcher = async (url: string) => {
 };
 
 export default function WeatherDashboard({ onAuthRequired }: WeatherDashboardProps) {
+  const { t } = useTranslation();
   const [processedData, setProcessedData] = useState<ProcessedWeatherData[]>([]);
   
   const { data, error, isLoading, mutate } = useSWR(
@@ -89,18 +91,18 @@ export default function WeatherDashboard({ onAuthRequired }: WeatherDashboardPro
             </svg>
           </div>
           <h3 className="text-lg font-medium text-red-800 mb-2">
-            Fehler beim Laden der Daten
+            {t('weather.dashboard.errorLoading')}
           </h3>
           <p className="text-red-600 mb-4">
             {error.message === 'AUTH_REQUIRED' 
-              ? 'Bitte melde dich erneut an.' 
-              : 'Es gab ein Problem beim Abrufen der Wetterdaten.'}
+              ? t('weather.dashboard.pleaseLoginAgain')
+              : t('weather.dashboard.errorFetching')}
           </p>
           <button
             onClick={handleRefresh}
             className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
           >
-            Erneut versuchen
+            {t('weather.dashboard.tryAgain')}
           </button>
         </div>
       </div>
@@ -117,10 +119,10 @@ export default function WeatherDashboard({ onAuthRequired }: WeatherDashboardPro
             </svg>
           </div>
           <h3 className="text-lg font-medium text-yellow-800 mb-2">
-            Keine Wetterstationen gefunden
+            {t('weather.dashboard.noStationsFound')}
           </h3>
           <p className="text-yellow-600">
-            Es wurden keine Wetterstationen in deinem Netatmo-Konto gefunden.
+            {t('weather.dashboard.noStationsMessage')}
           </p>
         </div>
       </div>
@@ -131,7 +133,7 @@ export default function WeatherDashboard({ onAuthRequired }: WeatherDashboardPro
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">
-          Deine Wetterstationen
+          {t('weather.dashboard.title')}
         </h2>
         <button
           onClick={handleRefresh}
@@ -140,7 +142,7 @@ export default function WeatherDashboard({ onAuthRequired }: WeatherDashboardPro
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Aktualisieren
+          {t('weather.dashboard.refresh')}
         </button>
       </div>
       

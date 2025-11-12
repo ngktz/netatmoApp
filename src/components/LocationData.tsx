@@ -1,12 +1,14 @@
 'use client';
 
 import { NetatmoPlace } from '@/types/netatmo';
+import { useTranslation } from '@/lib/locale-provider';
 
 interface LocationDataProps {
   place: NetatmoPlace;
 }
 
 export default function LocationData({ place }: LocationDataProps) {
+  const { t } = useTranslation();
   const { city, country, altitude, timezone, location } = place;
 
   return (
@@ -16,7 +18,7 @@ export default function LocationData({ place }: LocationDataProps) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        Standort
+        {t('weather.location.title')}
       </h4>
       
       <div className="grid grid-cols-2 gap-4">
@@ -28,7 +30,7 @@ export default function LocationData({ place }: LocationDataProps) {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Stadt</p>
+              <p className="text-sm text-gray-500">{t('weather.location.city')}</p>
               <p className="text-lg font-semibold text-gray-700">
                 {city}
               </p>
@@ -44,7 +46,7 @@ export default function LocationData({ place }: LocationDataProps) {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Land</p>
+              <p className="text-sm text-gray-500">{t('weather.location.country')}</p>
               <p className="text-lg font-semibold text-gray-700">
                 {country}
               </p>
@@ -60,7 +62,7 @@ export default function LocationData({ place }: LocationDataProps) {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Höhe</p>
+              <p className="text-sm text-gray-500">{t('weather.location.altitude')}</p>
               <p className="text-lg font-semibold text-gray-700">
                 {altitude.toFixed(0)} m
               </p>
@@ -76,7 +78,7 @@ export default function LocationData({ place }: LocationDataProps) {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Zeitzone</p>
+              <p className="text-sm text-gray-500">{t('weather.location.timezone')}</p>
               <p className="text-lg font-semibold text-gray-700">
                 {timezone}
               </p>
@@ -92,7 +94,7 @@ export default function LocationData({ place }: LocationDataProps) {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Koordinaten</p>
+              <p className="text-sm text-gray-500">{t('weather.location.coordinates')}</p>
               <p className="text-lg font-semibold text-gray-700">
                 {location[1].toFixed(6)}°N, {location[0].toFixed(6)}°E
               </p>

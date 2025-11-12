@@ -3,12 +3,14 @@
 import { ProcessedWeatherData } from '@/types/netatmo';
 import WeatherModule from './WeatherModule';
 import LocationData from './LocationData';
+import { useTranslation } from '@/lib/locale-provider';
 
 interface WeatherStationProps {
   station: ProcessedWeatherData;
 }
 
 export default function WeatherStation({ station }: WeatherStationProps) {
+  const { t } = useTranslation();
   const lastUpdate = station.homeBaseData?.lastUpdate || station.modules[0]?.lastUpdate;
 
   return (
@@ -36,7 +38,7 @@ export default function WeatherStation({ station }: WeatherStationProps) {
           <WeatherModule 
             module={{
               id: station.id,
-              name: 'HomeBase',
+              name: t('weather.module.homeBase'),
               data: {
                 time_utc: station.homeBaseData.time_utc,
                 Temperature: station.homeBaseData.Temperature,

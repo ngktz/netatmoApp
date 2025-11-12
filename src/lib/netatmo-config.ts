@@ -2,7 +2,7 @@ import { NetatmoConfig } from '@/types/netatmo';
 
 // Validate required environment variables
 const validateNetatmoConfig = () => {
-  const required = ['NETATMO_ACCESS_TOKEN'];
+  const required = ['NEXT_PUBLIC_NETATMO_CLIENT_ID', 'NETATMO_CLIENT_SECRET', 'NEXT_PUBLIC_NETATMO_REDIRECT_URI'];
   const missing = required.filter(key => !process.env[key]);
   
   if (missing.length > 0) {
@@ -18,23 +18,12 @@ export const NETATMO_CONFIG: NetatmoConfig = {
   apiBaseUrl: process.env.NEXT_PUBLIC_NETATMO_API_BASE_URL || 'https://api.netatmo.com'
 };
 
-// Get static access token from environment
-export const getNetatmoAccessToken = (): string => {
-  const token = process.env.NETATMO_ACCESS_TOKEN;
-  
-  if (!token) {
-    throw new Error('NETATMO_ACCESS_TOKEN is not set in environment variables');
-  }
-  
-  return token;
-};
-
 // Validate configuration on import (server-side only)
 if (typeof window === 'undefined') {
   validateNetatmoConfig();
 }
 
-// OAuth2 URLs (kept for backward compatibility, but not used with static token)
+// OAuth2 URLs
 export const getNetatmoAuthUrl = (state: string) => {
   const params = new URLSearchParams({
     client_id: NETATMO_CONFIG.clientId,

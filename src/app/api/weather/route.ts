@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server';
-import { getNetatmoAccessToken, NETATMO_CONFIG } from '@/lib/netatmo-config';
+import { NETATMO_CONFIG } from '@/lib/netatmo-config';
+import { getValidAccessToken } from '@/lib/token-manager';
 import { NetatmoWeatherData, NetatmoApiError } from '@/types/netatmo';
 
 export async function GET() {
   try {
-    // Get static access token from environment
-    const accessToken = getNetatmoAccessToken();
+    // Hole gültiges Access-Token (wird automatisch erneuert wenn nötig)
+    const accessToken = await getValidAccessToken();
+    
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: 'Nicht authentifiziert. Bitte melde dich erneut an.' },
+        { status: 401 }
+      );
+    }
     
     // Make request to Netatmo API
     const response = await fetch(`${NETATMO_CONFIG.apiBaseUrl}/api/getstationsdata`, {
@@ -23,7 +31,7 @@ export async function GET() {
       // Handle specific error cases
       if (response.status === 401) {
         return NextResponse.json(
-          { error: 'Access token invalid or expired. Please check NETATMO_ACCESS_TOKEN in .env' },
+          { error: 'Access token ungültig oder abgelaufen. Bitte melde dich erneut an.' },
           { status: 401 }
         );
       }
@@ -40,17 +48,8 @@ export async function GET() {
     
   } catch (error) {
     console.error('Weather API error:', error);
-    
-    // Handle missing token error
-    if (error instanceof Error && error.message.includes('NETATMO_ACCESS_TOKEN')) {
-      return NextResponse.json(
-        { error: 'NETATMO_ACCESS_TOKEN is not configured. Please set it in your .env file.' },
-        { status: 500 }
-      );
-    }
-    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Interner Serverfehler beim Abrufen der Wetterdaten' },
       { status: 500 }
     );
   }

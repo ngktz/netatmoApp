@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslation } from '@/lib/locale-provider';
+
 interface WeatherModuleProps {
   module: {
     id: string;
@@ -16,8 +18,8 @@ interface WeatherModuleProps {
   };
 }
 
-const formatValue = (value: number | undefined, unit: string, decimals = 1): string => {
-  if (value === undefined) return 'N/A';
+const formatValue = (value: number | undefined, unit: string, decimals = 1, notAvailable: string = 'N/A'): string => {
+  if (value === undefined) return notAvailable;
   return `${value.toFixed(decimals)} ${unit}`;
 };
 
@@ -47,6 +49,7 @@ const getCO2Color = (co2: number | undefined): string => {
 };
 
 export default function WeatherModule({ module }: WeatherModuleProps) {
+  const { t } = useTranslation();
   const { name, data } = module;
   const { Temperature, Humidity, CO2, Pressure, Noise } = data;
 
@@ -65,9 +68,9 @@ export default function WeatherModule({ module }: WeatherModuleProps) {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Temperatur</p>
+              <p className="text-sm text-gray-500">{t('weather.module.temperature')}</p>
               <p className={`text-lg font-semibold ${getTemperatureColor(Temperature)}`}>
-                {formatValue(Temperature, '°C')}
+                {formatValue(Temperature, '°C', 1, t('weather.module.notAvailable'))}
               </p>
             </div>
           </div>
@@ -81,9 +84,9 @@ export default function WeatherModule({ module }: WeatherModuleProps) {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Luftfeuchtigkeit</p>
+              <p className="text-sm text-gray-500">{t('weather.module.humidity')}</p>
               <p className={`text-lg font-semibold ${getHumidityColor(Humidity)}`}>
-                {formatValue(Humidity, '%')}
+                {formatValue(Humidity, '%', 1, t('weather.module.notAvailable'))}
               </p>
             </div>
           </div>
@@ -97,9 +100,9 @@ export default function WeatherModule({ module }: WeatherModuleProps) {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">CO₂</p>
+              <p className="text-sm text-gray-500">{t('weather.module.co2')}</p>
               <p className={`text-lg font-semibold ${getCO2Color(CO2)}`}>
-                {formatValue(CO2, 'ppm', 0)}
+                {formatValue(CO2, 'ppm', 0, t('weather.module.notAvailable'))}
               </p>
             </div>
           </div>
@@ -113,9 +116,9 @@ export default function WeatherModule({ module }: WeatherModuleProps) {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Luftdruck</p>
+              <p className="text-sm text-gray-500">{t('weather.module.pressure')}</p>
               <p className="text-lg font-semibold text-gray-700">
-                {formatValue(Pressure, 'mbar')}
+                {formatValue(Pressure, 'mbar', 1, t('weather.module.notAvailable'))}
               </p>
             </div>
           </div>
@@ -129,9 +132,9 @@ export default function WeatherModule({ module }: WeatherModuleProps) {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Lärmpegel</p>
+              <p className="text-sm text-gray-500">{t('weather.module.noise')}</p>
               <p className="text-lg font-semibold text-gray-700">
-                {formatValue(Noise, 'dB', 0)}
+                {formatValue(Noise, 'dB', 0, t('weather.module.notAvailable'))}
               </p>
             </div>
           </div>

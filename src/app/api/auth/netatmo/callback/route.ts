@@ -64,8 +64,19 @@ export async function GET(request: NextRequest) {
     // Clear state cookie
     response.cookies.delete('netatmo-state');
     
+    // Berechne Ablaufzeitpunkt für Access-Token
+    const expiresAt = Date.now() + (tokens.expires_in * 1000);
+    
     // Set secure token cookies
     response.cookies.set('netatmo-access-token', tokens.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: tokens.expires_in
+    });
+    
+    // Speichere Ablaufzeitpunkt separat für einfache Prüfung
+    response.cookies.set('netatmo-access-token-expires', expiresAt.toString(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

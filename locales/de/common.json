@@ -1,0 +1,50 @@
+{
+  "app": {
+    "title": "Netatmo Wetterstation App",
+    "description": "Deine persönliche Wetterstation"
+  },
+  "homepage": {
+    "title": "Netatmo Wetterstation",
+    "subtitle": "Deine persönlichen Wetterdaten im Überblick",
+    "error": "Fehler",
+    "errorLoadingData": "Fehler beim Laden der Wetterdaten.",
+    "networkError": "Netzwerkfehler beim Laden der Wetterdaten",
+    "configurationRequired": "Authentifizierung erforderlich",
+    "configurationMessage": "Bitte melde dich mit deinem Netatmo-Konto an, um auf deine Wetterdaten zuzugreifen.",
+    "readmeHint": "Klicke auf 'Mit Netatmo anmelden', um zu beginnen."
+  },
+  "auth": {
+    "connecting": "Verbinde...",
+    "loginWithNetatmo": "Mit Netatmo anmelden"
+  },
+  "weather": {
+    "dashboard": {
+      "title": "Deine Wetterstationen",
+      "refresh": "Aktualisieren",
+      "errorLoading": "Fehler beim Laden der Daten",
+      "pleaseLoginAgain": "Bitte melde dich erneut an.",
+      "errorFetching": "Es gab ein Problem beim Abrufen der Wetterdaten.",
+      "tryAgain": "Erneut versuchen",
+      "noStationsFound": "Keine Wetterstationen gefunden",
+      "noStationsMessage": "Es wurden keine Wetterstationen in deinem Netatmo-Konto gefunden."
+    },
+    "module": {
+      "temperature": "Temperatur",
+      "humidity": "Luftfeuchtigkeit",
+      "co2": "CO₂",
+      "pressure": "Luftdruck",
+      "noise": "Lärmpegel",
+      "homeBase": "HomeBase",
+      "notAvailable": "N/A"
+    },
+    "location": {
+      "title": "Standort",
+      "city": "Stadt",
+      "country": "Land",
+      "altitude": "Höhe",
+      "timezone": "Zeitzone",
+      "coordinates": "Koordinaten"
+    }
+  }
+}
+

@@ -10,10 +10,15 @@
     "lint:fix": "eslint . --fix",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf .next node_modules pnpm-lock.yaml",
-    "fresh-install": "pnpm clean && pnpm install"
+    "fresh-install": "pnpm clean && pnpm install",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:install": "playwright install"
   },
   "dependencies": {
     "next": "15.5.3",
+    "next-translate": "^2.6.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "swr": "^2.3.6",
@@ -21,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20.19.14",
     "@types/react": "^19",
