@@ -51,3 +51,8 @@ next-env.d.ts
 
 # drizzle migrations (keep structure, ignore generated files)
 /drizzle/*.sql
+
+# test coverage
+/coverage/
+/.coverage
+*.lcov
