@@ -42,3 +42,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# database
+/data/
+*.db
+*.db-shm
+*.db-wal
+
+# drizzle migrations (keep structure, ignore generated files)
+/drizzle/*.sql
